@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Cielo">
+<meta name="theme-color" content="#0b1020">
+<title>Cielo: il mio compagno di osservazione</title>
+<style>
+:root{--bg:#0b1020;--card:#141b33;--line:#243056;--tx:#e8ecf8;--mut:#9aa6c8;--ac:#f2c14e;--ok:#6fd3a0;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-mode="red"]{--bg:#120404;--card:#1d0808;--line:#4a1414;--tx:#ff8a7a;--mut:#c4574a;--ac:#ff5a44;--ok:#ff7a5c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,system-ui,"Segoe UI",sans-serif;max-width:640px;margin:0 auto;padding:0 16px 90px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0 8px}
+h1{font-size:22px;margin:0}h2{font-size:18px;margin:22px 0 8px}h3{margin:0;font-size:17px}
+.sub{color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+button.pri{background:var(--ac);color:#111;border-color:var(--ac);font-weight:600}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;border-radius:0;background:none;padding:14px 4px;color:var(--mut)}
+nav button.on{color:var(--ac);font-weight:600}
+.tag{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:20px;padding:1px 9px;color:var(--mut);margin:0 6px 4px 0}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px}
+.m{display:flex;gap:10px;align-items:flex-start;padding:8px 0}.m input{width:auto;margin-top:5px}
+.star summary{cursor:pointer;list-style:none}.star summary::-webkit-details-marker{display:none}
+.star p{margin:8px 0}.k{color:var(--ac);font-weight:600}
+.row{display:flex;justify-content:space-between;gap:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header><div><h1>🔭 Cielo</h1><div class="sub" id="date"></div></div><button id="mode">🔴 Modalità notte</button></header>
+
+<section id="t-sera">
+<div class="card"><div class="k">La Luna stasera</div><div id="moon"></div></div>
+<h2>Stasera, a occhio nudo</h2>
+<div class="card">
+<p>Dopo il tramonto, nel periodo autunnale, cerca in quest’ordine:</p>
+<p><span class="k">1. Stella Polare.</span> Parti dal Grande Carro (basso a nord), prendi le due stelle del bordo del “cucchiaio”, Dubhe e Merak, e prolunga la loro linea cinque volte: trovi Polaris, sempre ferma a nord.</p>
+<p><span class="k">2. Cassiopea.</span> Una grande “W” in alto, dall’altra parte della Polare rispetto al Grande Carro.</p>
+<p><span class="k">3. Quadrato di Pegaso.</span> Un grande quadrato di stelle alto a sud, con poche stelle intorno: serve cielo buio.</p>
+<p><span class="k">4. Galassia di Andromeda.</span> Dal quadrato, seguendo le stelle di Andromeda, è una macchia lattiginosa debole: luce partita da circa 2,5 milioni di anni.</p>
+<p class="sub">Più tardi in serata sorgono a est le Pleiadi; dopo mezzanotte arriva Orione. Le posizioni esatte cambiano con ora e luogo: la mappa interattiva sarà una prossima fase.</p>
+</div>
+<h2>Missione di stasera</h2>
+<div class="card" id="mis"></div>
+<p class="sub">Consiglio: spegni le luci e aspetta 20 minuti. L’occhio si adatta e le stelle deboli compaiono. Evita lo schermo bianco, usa la modalità notte.</p>
+</section>
+
+<section id="t-stelle" class="hide">
+<h2>Le schede delle stelle</h2><div id="stars"></div>
+</section>
+
+<section id="t-diario" class="hide">
+<h2>Nuova uscita</h2>
+<div class="card">
+<label>Luogo</label><input id="f-luogo" placeholder="es. giardino, colline...">
+<label>Qualità del cielo</label>
+<select id="f-cielo"><option>Molto buio</option><option>Discreto</option><option>Inquinato dalle luci</option><option>Luna molto luminosa</option><option>Nuvoloso</option></select>
+<label>Cosa ho riconosciuto</label><textarea id="f-visto" rows="2"></textarea>
+<label>Cosa ho imparato</label><textarea id="f-imp" rows="2"></textarea>
+<p><button class="pri" id="salva">Salva nel diario</button></p>
+</div>
+<h2>Le mie uscite <span class="sub" id="cnt"></span></h2>
+<div id="lista"></div>
+</section>
+
+<nav><button data-t="sera" class="on">🌙<br>Stasera</button><button data-t="stelle">⭐<br>Stelle</button><button data-t="diario">📓<br>Diario</button></nav>
+
+<script>
+var STARS=[
+{n:"Stella Polare (Polaris)",c:"Orsa Minore",d:"circa 430 anni luce",s:"tutto l’anno",
+ f:"Dal Grande Carro, prolunga cinque volte la distanza tra Dubhe e Merak.",
+ st:"Per secoli ha guidato i naviganti perché sembra immobile: si trova quasi esattamente sopra il polo nord celeste. Non è sempre stata la stella polare: a causa della precessione dell’asse terrestre, circa 4.700 anni fa il ruolo spettava a Thuban, nel Drago.",
+ sc:"È una Cefeide, una stella che pulsa regolarmente. Le Cefeidi sono servite a misurare le distanze delle galassie."},
+{n:"Vega",c:"Lira",d:"25 anni luce",s:"estate e inizio autunno",
+ f:"Molto luminosa, azzurra, alta a ovest all’inizio della sera. È un vertice del Triangolo Estivo, con Deneb e Altair.",
+ st:"In Cina e Giappone è la tessitrice Orihime, separata dal suo amato Altair dalla Via Lattea e destinata a incontrarlo solo una notte all’anno, la festa del Tanabata. In Grecia la Lira era quella di Orfeo.",
+ sc:"Fra circa 12.000 anni sarà di nuovo vicina al polo celeste e tornerà a essere una stella polare. Fu una delle prime stelle fotografate."},
+{n:"Pleiadi (M45)",c:"Toro",d:"circa 440 anni luce",s:"autunno e inverno",
+ f:"Un piccolo ammasso a forma di mestolino. Sorgono a est a tarda sera in autunno. A occhio nudo molti vedono 6 stelle: prova senza guardarle dritte.",
+ st:"Le sette sorelle della mitologia greca, figlie di Atlante. In Giappone si chiamano Subaru, nome che ha ispirato il logo della casa automobilistica.",
+ sc:"Un ammasso giovane, di circa 100 milioni di anni, con centinaia di stelle azzurre nate insieme. Il Sole è molto più vecchio."},
+{n:"Galassia di Andromeda (M31)",c:"Andromeda",d:"circa 2,5 milioni di anni luce",s:"autunno",
+ f:"Dal quadrato di Pegaso, segui le stelle di Andromeda. In cielo buio è una macchia allungata e pallida.",
+ st:"L’astronomo persiano al-Sufi la descrisse già nel X secolo come una piccola “nube”. Fino al 1920 circa si credeva fosse una nebulosa dentro la nostra galassia.",
+ sc:"È l’oggetto più lontano visibile a occhio nudo per molti osservatori. Si sta avvicinando alla Via Lattea e fra miliardi di anni le due galassie si fonderanno."},
+{n:"Sirio",c:"Cane Maggiore",d:"8,6 anni luce",s:"inverno (sorge a tarda notte in autunno)",
+ f:"Segui la cintura di Orione verso il basso a sinistra: la stella più brillante del cielo notturno.",
+ st:"Per gli antichi Egizi la sua ricomparsa all’alba annunciava la piena del Nilo e l’inizio dell’anno. Dal suo legame con il caldo estivo viene l’espressione “canicola”.",
+ sc:"Ha una compagna, Sirio B, una nana bianca molto densa, scoperta nel 1862."},
+{n:"Betelgeuse",c:"Orione",d:"circa 550-700 anni luce",s:"inverno",
+ f:"La stella rossastra in alto a sinistra in Orione, l’“spalla” del cacciatore.",
+ st:"Il nome viene dall’arabo e la sua origine esatta è discussa. Tra il 2019 e il 2020 si è oscurata in modo sorprendente (la “Grande Attenuazione”) e per qualche mese si è discusso di un’esplosione imminente.",
+ sc:"È una supergigante rossa: se fosse al posto del Sole, ne inghiottirebbe i pianeti interni. Esploderà come supernova, ma probabilmente fra molte migliaia di anni."},
+{n:"Arturo",c:"Boote",d:"circa 37 anni luce",s:"primavera e estate",
+ f:"Segui la curva del manico del Grande Carro: “segui l’arco fino ad Arturo”. Brillante e arancione.",
+ st:"Nel 1933 la luce di Arturo, partita circa 40 anni prima, fu usata per accendere le luci dell’Esposizione di Chicago, un’idea per celebrare il tempo trascorso dalla luce stessa.",
+ sc:"Una gigante arancione che si muove velocemente rispetto alle altre stelle: nei secoli si sposta visibilmente."}
+];
+var MIS=["Aspetta 20 minuti al buio per adattare la vista","Trova la Stella Polare partendo dal Grande Carro","Riconosci Cassiopea e il quadrato di Pegaso","Prova a vedere la galassia di Andromeda"];
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function ld(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var now=new Date();
+$("date").textContent=now.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+// luna
+var P=29.530588,age=(((now-Date.UTC(2000,0,6,18,14))/864e5)%P+P)%P,il=Math.round((1-Math.cos(2*Math.PI*age/P))/2*100);
+var nm=age<1.8?"Luna nuova":age<7.4?"Luna crescente":age<9.2?"Primo quarto":age<14.8?"Gibbosa crescente":age<16.6?"Luna piena":age<22.1?"Gibbosa calante":age<23.9?"Ultimo quarto":age<27.7?"Luna calante":"Luna nuova";
+$("moon").innerHTML=nm+" (circa "+il+"% illuminata). "+(il>60?"Molto luminosa: le stelle deboli e Andromeda saranno difficili.":"Cielo favorevole per le stelle deboli.");
+// missioni
+function rMis(){var d=ld("mis",{}),h="";MIS.forEach(function(t,i){h+='<label class="m"><input type="checkbox" data-i="'+i+'"'+(d[i]?" checked":"")+'><span>'+esc(t)+'</span></label>'});$("mis").innerHTML=h}
+$("mis").addEventListener("change",function(e){var d=ld("mis",{});d[e.target.dataset.i]=e.target.checked;sv("mis",d)});
+rMis();
+// stelle
+var h="";STARS.forEach(function(s){h+='<details class="card star"><summary><div class="row"><h3>'+esc(s.n)+'</h3><span class="sub">▾</span></div><div class="sub">'+esc(s.c)+' · '+esc(s.d)+'</div></summary><p><span class="tag">'+esc(s.s)+'</span></p><p><span class="k">Come trovarla.</span> '+esc(s.f)+'</p><p><span class="k">Storia.</span> '+esc(s.st)+'</p><p><span class="k">Scienza.</span> '+esc(s.sc)+'</p></details>'});
+$("stars").innerHTML=h;
+// diario
+function rD(){var L=ld("diario",[]);$("cnt").textContent="("+L.length+")";var o="";
+if(!L.length)o='<p class="sub">Nessuna uscita ancora. La prima è sempre la più bella.</p>';
+L.slice().reverse().forEach(function(e,j){var i=L.length-1-j;o+='<div class="card"><div class="row"><b>'+esc(e.d)+'</b><button data-del="'+i+'">✕</button></div><div class="sub">'+esc(e.l||"—")+' · '+esc(e.c)+'</div><p><span class="k">Riconosciuto:</span> '+esc(e.v||"—")+'</p><p><span class="k">Imparato:</span> '+esc(e.i||"—")+'</p></div>'});
+$("lista").innerHTML=o}
+$("salva").onclick=function(){var L=ld("diario",[]);L.push({d:now.toLocaleDateString("it-IT"),l:$("f-luogo").value,c:$("f-cielo").value,v:$("f-visto").value,i:$("f-imp").value});sv("diario",L);["f-luogo","f-visto","f-imp"].forEach(function(i){$(i).value=""});rD()};
+$("lista").addEventListener("click",function(e){var i=e.target.dataset.del;if(i===undefined)return;var L=ld("diario",[]);L.splice(+i,1);sv("diario",L);rD()});
+rD();
+// tab e modalità
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","stelle","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0)}});
+function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m)}
+$("mode").onclick=function(){setMode(document.documentElement.getAttribute("data-mode")==="red"?"normal":"red")};
+setMode(ld("mode","normal"));
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+</script>
+</body>
+</html>
