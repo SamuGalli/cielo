@@ -33,6 +33,7 @@ input,textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--b
 .star p{margin:8px 0}.k{color:var(--ac);font-weight:600}
 .row{display:flex;justify-content:space-between;gap:8px}
 .hide{display:none}
+img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 0 0}.t{font-size:38px;text-align:center;font-variant-numeric:tabular-nums;margin:6px 0}input[type=range]{padding:0}
 </style>
 </head>
 <body>
@@ -40,24 +41,26 @@ input,textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--b
 
 <section id="t-sera">
 <div class="card"><div class="k">La Luna stasera</div><div id="moon"></div></div>
-<h2>Stasera, a occhio nudo</h2>
-<div class="card">
-<p>Dopo il tramonto, nel periodo autunnale, cerca in quest’ordine:</p>
-<p><span class="k">1. Stella Polare.</span> Parti dal Grande Carro (basso a nord), prendi le due stelle del bordo del “cucchiaio”, Dubhe e Merak, e prolunga la loro linea cinque volte: trovi Polaris, sempre ferma a nord.</p>
-<p><span class="k">2. Cassiopea.</span> Una grande “W” in alto, dall’altra parte della Polare rispetto al Grande Carro.</p>
-<p><span class="k">3. Quadrato di Pegaso.</span> Un grande quadrato di stelle alto a sud, con poche stelle intorno: serve cielo buio.</p>
-<p><span class="k">4. Galassia di Andromeda.</span> Dal quadrato, seguendo le stelle di Andromeda, è una macchia lattiginosa debole: luce partita da circa 2,5 milioni di anni.</p>
-<p class="sub">Più tardi in serata sorgono a est le Pleiadi; dopo mezzanotte arriva Orione. Le posizioni esatte cambiano con ora e luogo: la mappa interattiva sarà una prossima fase.</p>
-</div>
+<h2>Stasera, dove guardare</h2>
+<div class="card" id="oggi"></div>
 <h2>Missione di stasera</h2>
 <div class="card" id="mis"></div>
 <p class="sub">Consiglio: spegni le luci e aspetta 20 minuti. L’occhio si adatta e le stelle deboli compaiono. Evita lo schermo bianco, usa la modalità notte.</p>
 </section>
 
 <section id="t-stelle" class="hide">
-<h2>Le schede delle stelle</h2><div id="stars"></div>
+<h2>Le schede delle stelle</h2><p class="sub">Schede in revisione: nel prossimo lotto ogni dato avrà le fonti indicate e sarà segnato come misurato, tradizione o incerto.</p><div id="stars"></div>
 </section>
 
+<section id="t-guida" class="hide">
+<h2>Prima di uscire</h2><div class="card" id="chk"></div>
+<h2>Adatta la vista</h2><div class="card"><div class="t" id="tm">20:00</div><p class="sub">Dopo circa 20 minuti al buio gli occhi si adattano e compaiono le stelle deboli. Il timer va avanti anche se il telefono si blocca.</p><p><button class="pri" id="tmb">Avvia 20 minuti al buio</button></p></div>
+<h2>Orientarsi</h2><div class="card">
+<p><span class="k">Stella Polare.</span> Dal Grande Carro prendi le due stelle del bordo del “cucchiaio”, Dubhe e Merak, e prolunga la linea di circa cinque volte la loro distanza: trovi la Polare, che indica il nord.</p>
+<p><span class="k">Misurare con la mano.</span> A braccio teso, il pugno chiuso copre circa 10°, la mano aperta circa 20°, il mignolo circa 1°.</p>
+<p><span class="k">Stella o pianeta?</span> Le stelle scintillano; i pianeti hanno una luce più ferma. Un punto che si muove lento e regolare è un satellite o un aereo.</p>
+<p><span class="k">Salti di stella.</span> Per trovare un oggetto debole parti da una stella brillante e misura i salti con la mano.</p></div>
+</section>
 <section id="t-diario" class="hide">
 <h2>Nuova uscita</h2>
 <div class="card">
@@ -66,13 +69,16 @@ input,textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--b
 <select id="f-cielo"><option>Molto buio</option><option>Discreto</option><option>Inquinato dalle luci</option><option>Luna molto luminosa</option><option>Nuvoloso</option></select>
 <label>Cosa ho riconosciuto</label><textarea id="f-visto" rows="2"></textarea>
 <label>Cosa ho imparato</label><textarea id="f-imp" rows="2"></textarea>
+<label>Un pensiero</label><textarea id="f-pens" rows="2" placeholder="Cosa hai provato, cosa ti ha colpito..."></textarea>
+<label>Foto (scatta o scegli)</label><input type="file" id="f-foto" accept="image/*" multiple>
 <p><button class="pri" id="salva">Salva nel diario</button></p>
 </div>
+<p><button id="exp">⬇️ Esporta backup</button> <button id="imp">⬆️ Importa</button><input type="file" id="impf" accept=".json,application/json" class="hide"></p>
 <h2>Le mie uscite <span class="sub" id="cnt"></span></h2>
 <div id="lista"></div>
 </section>
 
-<nav><button data-t="sera" class="on">🌙<br>Stasera</button><button data-t="stelle">⭐<br>Stelle</button><button data-t="diario">📓<br>Diario</button></nav>
+<nav><button data-t="sera" class="on">🌙<br>Stasera</button><button data-t="stelle">⭐<br>Stelle</button><button data-t="guida">🧭<br>Guida</button><button data-t="diario">📓<br>Diario</button></nav>
 
 <script>
 var STARS=[
@@ -123,16 +129,79 @@ rMis();
 // stelle
 var h="";STARS.forEach(function(s){h+='<details class="card star"><summary><div class="row"><h3>'+esc(s.n)+'</h3><span class="sub">▾</span></div><div class="sub">'+esc(s.c)+' · '+esc(s.d)+'</div></summary><p><span class="tag">'+esc(s.s)+'</span></p><p><span class="k">Come trovarla.</span> '+esc(s.f)+'</p><p><span class="k">Storia.</span> '+esc(s.st)+'</p><p><span class="k">Scienza.</span> '+esc(s.sc)+'</p></details>'});
 $("stars").innerHTML=h;
+/*ASTRO*/
+var R=Math.PI/180;
+function jd(d){return d/864e5+2440587.5}
+function lst(d,lo){var D=jd(d)-2451545.0;return((((280.46061837+360.98564736629*D)+lo)%360)+360)%360}
+function altaz(ra,de,la,lo,d){var H=(lst(d,lo)-ra)*R,f=la*R,e=de*R;
+var alt=Math.asin(Math.sin(f)*Math.sin(e)+Math.cos(f)*Math.cos(e)*Math.cos(H));
+var az=Math.atan2(-Math.sin(H)*Math.cos(e),Math.sin(e)*Math.cos(f)-Math.cos(e)*Math.sin(f)*Math.cos(H));
+return[alt/R,((az/R)+360)%360]}
+function sun(d){var n=jd(d)-2451545.0,L=(280.460+0.9856474*n)%360,g=((357.528+0.9856003*n)%360)*R,
+l=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*R,e=(23.439-4e-7*n)*R;
+return[Math.atan2(Math.cos(e)*Math.sin(l),Math.cos(l))/R,Math.asin(Math.sin(e)*Math.sin(l))/R]}
+function salt(d,c){var s=sun(d);return altaz(s[0],s[1],c.la,c.lo,d)[0]}
+/*END*/
+var CITY={"Torino":[45.07,7.69],"Milano":[45.46,9.19],"Venezia":[45.44,12.32],"Bologna":[44.49,11.34],"Firenze":[43.77,11.26],"Roma":[41.90,12.50],"Napoli":[40.85,14.27],"Bari":[41.12,16.87],"Palermo":[38.12,13.36],"Cagliari":[39.22,9.12]};
+var OBJ=[["Stella Polare","Orsa Minore",2.5303,89.264],["Vega","Lira",18.6156,38.784],["Sirio","Cane Maggiore",6.7525,-16.716],["Betelgeuse","Orione",5.9194,7.407],["Rigel","Orione",5.2422,-8.202],["Arturo","Boote",14.2611,19.182],["Capella","Auriga",5.2781,45.998],["Aldebaran","Toro",4.5986,16.509],["Altair","Aquila",19.8464,8.868],["Deneb","Cigno",20.6906,45.280],["Antares","Scorpione",16.4900,-26.432],["Spica","Vergine",13.4200,-11.161],["Regulus","Leone",10.1394,11.967],["Fomalhaut","Pesce Australe",22.9608,-29.622],["Pleiadi (M45)","Toro",3.79,24.12],["Galassia di Andromeda","Andromeda",0.7117,41.27]];
+var DIR=["nord","nord-est","est","sud-est","sud","sud-ovest","ovest","nord-ovest"],OFF=0;
+function hm(t){return t?t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"—"}
+function rT(){var el=$("oggi"),c=ld("loc",null);
+if(!c){var o='<p>Per sapere cosa vedi dal tuo posto serve la posizione. Resta nel telefono, non viene inviata a nessuno.</p><p><button class="pri" data-geo="1">Usa la mia posizione</button></p><label>…oppure scegli una città</label><select data-city="1"><option value="">Scegli…</option>';
+for(var k in CITY)o+="<option>"+k+"</option>";el.innerHTML=o+"</select>";return}
+var b=new Date();if(b.getHours()<12)b.setDate(b.getDate()-1);b.setHours(12,0,0,0);
+var ev={},pv=salt(b,c);
+for(var m=1;m<=720;m++){var t=new Date(b.getTime()+m*12e4),a=salt(t,c);
+if(pv>-0.833&&a<=-0.833&&!ev.s)ev.s=t;if(pv>-18&&a<=-18&&!ev.d)ev.d=t;if(pv<=-18&&a>-18&&ev.d&&!ev.e)ev.e=t;if(pv<=-0.833&&a>-0.833&&ev.s&&!ev.a)ev.a=t;pv=a}
+el.innerHTML='<p><span class="k">Tramonto</span> '+hm(ev.s)+' · <span class="k">Buio completo</span> '+hm(ev.d)+"–"+hm(ev.e)+' · <span class="k">Alba</span> '+hm(ev.a)+'</p><label>Ora: <span id="oraL"></span></label><input type="range" min="0" max="12" value="'+OFF+'" data-off="1"><div id="lst"></div><p class="sub">Posizione: '+esc(c.n)+' <button data-reset="1">cambia</button></p><p class="sub">Calcolo fatto dal telefono, senza internet. Precisione di circa 1°, sufficiente a occhio nudo. Non include ancora i pianeti.</p>';rL()}
+function rL(){var c=ld("loc",null);if(!c||!$("lst"))return;var t=new Date(Date.now()+OFF*36e5),o=[],sa=salt(t,c);
+OBJ.forEach(function(s){var a=altaz(s[2]*15,s[3],c.la,c.lo,t);if(a[0]>10)o.push([s,a])});
+o.sort(function(x,y){return y[1][0]-x[1][0]});
+$("oraL").textContent=hm(t)+(OFF?" (+"+OFF+" h)":" (adesso)");
+$("lst").innerHTML=(sa>-0.833?'<p class="sub">Il Sole è ancora sopra l’orizzonte.</p>':sa>-12?'<p class="sub">Il cielo è ancora chiaro: si vedono solo gli astri più brillanti.</p>':"")+(o.length?o.map(function(x){return'<div class="row"><span><b>'+x[0][0]+'</b> <span class="sub">'+x[0][1]+"</span></span><span>"+Math.round(x[1][0])+"° · "+DIR[Math.round(x[1][1]/45)%8]+"</span></div>"}).join(""):"<p>Nessun oggetto della lista sopra i 10°.</p>")}
+$("oggi").addEventListener("click",function(e){if(e.target.dataset.geo){if(!navigator.geolocation){alert("Posizione non disponibile: scegli una città.");return}
+navigator.geolocation.getCurrentPosition(function(p){sv("loc",{la:p.coords.latitude,lo:p.coords.longitude,n:"la tua posizione"});rT()},function(){alert("Non riesco a leggere la posizione: scegli una città dalla lista.")},{timeout:10000})}
+if(e.target.dataset.reset){sv("loc",null);rT()}});
+$("oggi").addEventListener("change",function(e){var c=e.target.dataset.city&&CITY[e.target.value];if(c){sv("loc",{la:c[0],lo:c[1],n:e.target.value});rT()}});
+$("oggi").addEventListener("input",function(e){if(e.target.dataset.off){OFF=+e.target.value;rL()}});
+rT();setInterval(rL,6e4);
+// guida
+function cl(id,key,items){var d=ld(key,{}),h="";items.forEach(function(t,i){h+='<label class="m"><input type="checkbox" data-i="'+i+'"'+(d[i]?" checked":"")+"><span>"+t+"</span></label>"});$(id).innerHTML=h;
+$(id).onchange=function(e){var d=ld(key,{});d[e.target.dataset.i]=e.target.checked;sv(key,d)}}
+cl("chk","chk",["Controlla le nuvole nell’app Meteo","Guarda la fase della Luna: con la Luna piena le stelle deboli spariscono","Vestiti a strati: di notte fa più freddo del previsto","Batteria carica e modalità notte attiva","Dì a qualcuno dove vai","Dopo l’uscita, scrivi il diario"]);
+var TM=ld("tm",0);function pad(n){return(n<10?"0":"")+n}
+function rTm(){var l=Math.round((TM-Date.now())/1000);$("tm").textContent=!TM?"20:00":l>0?pad(Math.floor(l/60))+":"+pad(l%60):"Vista adattata ✓"}
+$("tmb").onclick=function(){TM=Date.now()+12e5;sv("tm",TM);rTm()};setInterval(rTm,1000);rTm();
 // diario
-function rD(){var L=ld("diario",[]);$("cnt").textContent="("+L.length+")";var o="";
+function db(){return new Promise(function(ok,ko){var r=indexedDB.open("cielo",1);r.onupgradeneeded=function(){r.result.createObjectStore("f")};r.onsuccess=function(){ok(r.result)};r.onerror=ko})}
+function fop(m,f){return db().then(function(d){return new Promise(function(ok,ko){var t=d.transaction("f",m),q=f(t.objectStore("f"));t.oncomplete=function(){ok(q.result)};t.onerror=ko})})}
+function fput(k,v){return fop("readwrite",function(s){return s.put(v,k)})}
+function fget(k){return fop("readonly",function(s){return s.get(k)})}
+function fdel(k){return fop("readwrite",function(s){return s.delete(k)})}
+function small(f){return new Promise(function(ok){var im=new Image(),u=URL.createObjectURL(f);im.onload=function(){var s=Math.min(1,1024/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",.7))};im.onerror=function(){ok(null)};im.src=u})}
+function rD(){var L=ld("diario",[]),o="";$("cnt").textContent="("+L.length+")";
 if(!L.length)o='<p class="sub">Nessuna uscita ancora. La prima è sempre la più bella.</p>';
-L.slice().reverse().forEach(function(e,j){var i=L.length-1-j;o+='<div class="card"><div class="row"><b>'+esc(e.d)+'</b><button data-del="'+i+'">✕</button></div><div class="sub">'+esc(e.l||"—")+' · '+esc(e.c)+'</div><p><span class="k">Riconosciuto:</span> '+esc(e.v||"—")+'</p><p><span class="k">Imparato:</span> '+esc(e.i||"—")+'</p></div>'});
-$("lista").innerHTML=o}
-$("salva").onclick=function(){var L=ld("diario",[]);L.push({d:now.toLocaleDateString("it-IT"),l:$("f-luogo").value,c:$("f-cielo").value,v:$("f-visto").value,i:$("f-imp").value});sv("diario",L);["f-luogo","f-visto","f-imp"].forEach(function(i){$(i).value=""});rD()};
-$("lista").addEventListener("click",function(e){var i=e.target.dataset.del;if(i===undefined)return;var L=ld("diario",[]);L.splice(+i,1);sv("diario",L);rD()});
+L.slice().reverse().forEach(function(e,j){var i=L.length-1-j;o+='<div class="card"><div class="row"><b>'+esc(e.d)+'</b><button data-del="'+i+'">✕</button></div><div class="sub">'+esc(e.l||"—")+" · "+esc(e.c)+"</div>"+(e.v?'<p><span class="k">Riconosciuto:</span> '+esc(e.v)+"</p>":"")+(e.i?'<p><span class="k">Imparato:</span> '+esc(e.i)+"</p>":"")+(e.p?'<p><span class="k">Pensiero:</span> '+esc(e.p)+"</p>":"")+'<div id="ph'+i+'"></div></div>'});
+$("lista").innerHTML=o;
+L.forEach(function(e,i){for(var n=0;n<(e.n||0);n++)(function(i,k){fget(k).then(function(u){var el=$("ph"+i);if(u&&el){var im=new Image();im.src=u;im.className="th";el.appendChild(im)}}).catch(function(){})})(i,e.id+"-"+n)})}
+$("salva").onclick=function(){var fl=Array.prototype.slice.call($("f-foto").files),id=Date.now();
+Promise.all(fl.map(small)).then(function(a){a=a.filter(Boolean);return Promise.all(a.map(function(u,i){return fput(id+"-"+i,u)})).then(function(){return a.length})}).catch(function(){return 0}).then(function(n){
+var L=ld("diario",[]);L.push({id:id,d:new Date().toLocaleDateString("it-IT"),l:$("f-luogo").value,c:$("f-cielo").value,v:$("f-visto").value,i:$("f-imp").value,p:$("f-pens").value,n:n});sv("diario",L);
+["f-luogo","f-visto","f-imp","f-pens","f-foto"].forEach(function(k){$(k).value=""});rD()})};
+$("lista").addEventListener("click",function(e){var i=e.target.dataset.del;if(i===undefined||!confirm("Eliminare questa uscita?"))return;var L=ld("diario",[]),x=L[+i];
+for(var n=0;n<(x.n||0);n++)fdel(x.id+"-"+n).catch(function(){});L.splice(+i,1);sv("diario",L);rD()});
+$("exp").onclick=function(){var L=ld("diario",[]),P={},j=[];
+L.forEach(function(e){for(var n=0;n<(e.n||0);n++)(function(k){j.push(fget(k).then(function(u){P[k]=u}))})(e.id+"-"+n)});
+Promise.all(j).then(function(){var b=new Blob([JSON.stringify({v:2,diario:L,foto:P})],{type:"application/json"}),f=new File([b],"diario-cielo.json",{type:"application/json"});
+if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f]}).catch(function(){});else{var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="diario-cielo.json";a.click()}})};
+$("imp").onclick=function(){$("impf").click()};
+$("impf").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result),L=ld("diario",[]),h={};
+function kk(e){return e.id||JSON.stringify(e)}L.forEach(function(e){h[kk(e)]=1});var add=(o.diario||[]).filter(function(e){return!h[kk(e)]});
+Promise.all(Object.keys(o.foto||{}).map(function(k){return fput(k,o.foto[k])})).then(function(){sv("diario",L.concat(add));rD()})}catch(x){alert("File non valido.")}};r.readAsText(f)};
 rD();
+
 // tab e modalità
-document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","stelle","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0)}});
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0)}});
 function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m)}
 $("mode").onclick=function(){setMode(document.documentElement.getAttribute("data-mode")==="red"?"normal":"red")};
 setMode(ld("mode","normal"));
