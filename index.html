@@ -48,6 +48,14 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <p class="sub">Consiglio: spegni le luci e aspetta 20 minuti. L’occhio si adatta e le stelle deboli compaiono. Evita lo schermo bianco, usa la modalità notte.</p>
 </section>
 
+<section id="t-mappa" class="hide">
+<h2>Mappa del cielo</h2>
+<canvas id="cv" style="width:100%;height:60vh;border-radius:14px;touch-action:none;display:block"></canvas>
+<p class="sub" id="mi"></p>
+<p><button id="mc">🧭 Bussola</button> <button id="mz">−</button> <button id="mp">＋</button> <button id="ml">Sagome: sì</button> <button id="ma" class="hide">Allinea qui</button></p>
+<p class="sub" id="mn"></p>
+<p class="sub">Calcolata dal telefono, senza internet. * = sagoma con posizioni delle stelle ancora da verificare. La bussola dell’iPhone può avere qualche grado di errore: per questo c’è “Allinea qui”.</p>
+</section>
 <section id="t-stelle" class="hide">
 <h2>Le schede delle stelle</h2><p class="sub">Schede in revisione: nel prossimo lotto ogni dato avrà le fonti indicate e sarà segnato come misurato, tradizione o incerto.</p><div id="stars"></div>
 </section>
@@ -60,6 +68,7 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <p><span class="k">Misurare con la mano.</span> A braccio teso, il pugno chiuso copre circa 10°, la mano aperta circa 20°, il mignolo circa 1°.</p>
 <p><span class="k">Stella o pianeta?</span> Le stelle scintillano; i pianeti hanno una luce più ferma. Un punto che si muove lento e regolare è un satellite o un aereo.</p>
 <p><span class="k">Salti di stella.</span> Per trovare un oggetto debole parti da una stella brillante e misura i salti con la mano.</p></div>
+<h2>Privacy</h2><div class="card"><p>Tutto resta sul tuo telefono: posizione (solo se la scegli), diario, foto, spunte e taratura della bussola. L’app non invia dati a nessuno: nel codice non ci sono richieste verso altri siti. Il sito è pubblico ma contiene solo il codice dell’app, non i tuoi dati. Come per ogni sito, chi lo ospita vede l’indirizzo internet di chi lo apre.</p><p><button id="wipe">🗑 Cancella tutti i miei dati</button></p></div>
 </section>
 <section id="t-diario" class="hide">
 <h2>Nuova uscita</h2>
@@ -78,7 +87,7 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <div id="lista"></div>
 </section>
 
-<nav><button data-t="sera" class="on">🌙<br>Stasera</button><button data-t="stelle">⭐<br>Stelle</button><button data-t="guida">🧭<br>Guida</button><button data-t="diario">📓<br>Diario</button></nav>
+<nav><button data-t="sera" class="on">🌙<br>Stasera</button><button data-t="mappa">🗺️<br>Mappa</button><button data-t="stelle">⭐<br>Stelle</button><button data-t="guida">🧭<br>Guida</button><button data-t="diario">📓<br>Diario</button></nav>
 
 <script>
 var STARS=[
@@ -148,7 +157,7 @@ var DIR=["nord","nord-est","est","sud-est","sud","sud-ovest","ovest","nord-ovest
 function hm(t){return t?t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"—"}
 function rT(){var el=$("oggi"),c=ld("loc",null);
 if(!c){var o='<p>Per sapere cosa vedi dal tuo posto serve la posizione. Resta nel telefono, non viene inviata a nessuno.</p><p><button class="pri" data-geo="1">Usa la mia posizione</button></p><label>…oppure scegli una città</label><select data-city="1"><option value="">Scegli…</option>';
-for(var k in CITY)o+="<option>"+k+"</option>";el.innerHTML=o+"</select>";return}
+for(var k in CITY)o+="<option>"+k+"</option>";el.innerHTML=o+'</select><label>…oppure inserisci le coordinate</label><input id="lat" inputmode="decimal" placeholder="Latitudine, es. 45.0"><input id="lon" inputmode="decimal" placeholder="Longitudine, es. 9.0" style="margin-top:6px"><p><button data-man="1">Usa queste coordinate</button></p>';return}
 var b=new Date();if(b.getHours()<12)b.setDate(b.getDate()-1);b.setHours(12,0,0,0);
 var ev={},pv=salt(b,c);
 for(var m=1;m<=720;m++){var t=new Date(b.getTime()+m*12e4),a=salt(t,c);
@@ -161,7 +170,8 @@ $("oraL").textContent=hm(t)+(OFF?" (+"+OFF+" h)":" (adesso)");
 $("lst").innerHTML=(sa>-0.833?'<p class="sub">Il Sole è ancora sopra l’orizzonte.</p>':sa>-12?'<p class="sub">Il cielo è ancora chiaro: si vedono solo gli astri più brillanti.</p>':"")+(o.length?o.map(function(x){return'<div class="row"><span><b>'+x[0][0]+'</b> <span class="sub">'+x[0][1]+"</span></span><span>"+Math.round(x[1][0])+"° · "+DIR[Math.round(x[1][1]/45)%8]+"</span></div>"}).join(""):"<p>Nessun oggetto della lista sopra i 10°.</p>")}
 $("oggi").addEventListener("click",function(e){if(e.target.dataset.geo){if(!navigator.geolocation){alert("Posizione non disponibile: scegli una città.");return}
 navigator.geolocation.getCurrentPosition(function(p){sv("loc",{la:p.coords.latitude,lo:p.coords.longitude,n:"la tua posizione"});rT()},function(){alert("Non riesco a leggere la posizione: scegli una città dalla lista.")},{timeout:10000})}
-if(e.target.dataset.reset){sv("loc",null);rT()}});
+if(e.target.dataset.reset){sv("loc",null);rT()}
+if(e.target.dataset.man){var la=parseFloat(($("lat").value||"").replace(",",".")),lo=parseFloat(($("lon").value||"").replace(",","."));if(!(la>=-90&&la<=90&&lo>=-180&&lo<=180)){alert("Coordinate non valide: latitudine tra −90 e 90, longitudine tra −180 e 180.");return}sv("loc",{la:la,lo:lo,n:"coordinate inserite"});rT()}});
 $("oggi").addEventListener("change",function(e){var c=e.target.dataset.city&&CITY[e.target.value];if(c){sv("loc",{la:c[0],lo:c[1],n:e.target.value});rT()}});
 $("oggi").addEventListener("input",function(e){if(e.target.dataset.off){OFF=+e.target.value;rL()}});
 rT();setInterval(rL,6e4);
@@ -174,7 +184,7 @@ function rTm(){var l=Math.round((TM-Date.now())/1000);$("tm").textContent=!TM?"2
 $("tmb").onclick=function(){TM=Date.now()+12e5;sv("tm",TM);rTm()};setInterval(rTm,1000);rTm();
 // diario
 function db(){return new Promise(function(ok,ko){var r=indexedDB.open("cielo",1);r.onupgradeneeded=function(){r.result.createObjectStore("f")};r.onsuccess=function(){ok(r.result)};r.onerror=ko})}
-function fop(m,f){return db().then(function(d){return new Promise(function(ok,ko){var t=d.transaction("f",m),q=f(t.objectStore("f"));t.oncomplete=function(){ok(q.result)};t.onerror=ko})})}
+function fop(m,f){return db().then(function(d){return new Promise(function(ok,ko){var t=d.transaction("f",m),q=f(t.objectStore("f"));t.oncomplete=function(){d.close();ok(q.result)};t.onerror=ko})})}
 function fput(k,v){return fop("readwrite",function(s){return s.put(v,k)})}
 function fget(k){return fop("readonly",function(s){return s.get(k)})}
 function fdel(k){return fop("readwrite",function(s){return s.delete(k)})}
@@ -200,9 +210,61 @@ function kk(e){return e.id||JSON.stringify(e)}L.forEach(function(e){h[kk(e)]=1})
 Promise.all(Object.keys(o.foto||{}).map(function(k){return fput(k,o.foto[k])})).then(function(){sv("diario",L.concat(add));rD()})}catch(x){alert("File non valido.")}};r.readAsText(f)};
 rD();
 
+// mappa
+/*MAPMATH*/
+var ST={sir:["Sirio",6.7525,-16.716,-1.46,2],can:["Canopo",6.3992,-52.696,-0.74,1],art:["Arturo",14.2611,19.182,-0.05,2],acn:["Alfa Centauri",14.6601,-60.834,-0.27,1],veg:["Vega",18.6156,38.784,0.03,2],cap:["Capella",5.2781,45.998,0.08,1],rig:["Rigel",5.2422,-8.202,0.13,2],pro:["Procione",7.6550,5.225,0.34,1],bet:["Betelgeuse",5.9194,7.407,0.5,2],atr:["Altair",19.8464,8.868,0.76,2],ald:["Aldebaran",4.5986,16.509,0.86,2],spi:["Spica",13.4200,-11.161,0.97,1],ant:["Antares",16.4900,-26.432,1.06,1],plx:["Polluce",7.7554,28.026,1.14,1],fom:["Fomalhaut",22.9608,-29.622,1.16,1],den:["Deneb",20.6906,45.280,1.25,1],reg:["Regolo",10.1394,11.967,1.35,1],cas:["Castore",7.5767,31.888,1.58,1],pln:["Polare",2.5303,89.264,1.98,0],
+dub:["Dubhe",11.0621,61.751,1.8,0],mer:["Merak",11.0307,56.383,2.4,0],phe:["Fecda",11.8971,53.695,2.4,0],meg:["Megrez",12.2571,57.033,3.3,0],ali:["Alioth",12.9005,55.960,1.8,0],miz:["Mizar",13.3987,54.925,2.2,0],alk:["Alkaid",13.7923,49.313,1.9,0],
+sch:["Schedar",0.6751,56.537,2.2,0],cph:["Caph",0.1530,59.150,2.3,0],gcs:["Gamma Cas",0.9451,60.717,2.5,0],ruc:["Ruchbah",1.4303,60.235,2.7,0],seg:["Segin",1.9066,63.670,3.4,0],
+bel:["Bellatrix",5.4189,6.350,1.6,0],ani:["Alnitak",5.6793,-1.943,1.7,0],anl:["Alnilam",5.6036,-1.202,1.7,0],mnt:["Mintaka",5.5334,-0.299,2.2,0],sai:["Saiph",5.7959,-9.670,2.1,0],mei:["Meissa",5.5856,9.934,3.3,0]};
+var CN=[["Orione*","mnt",[["bet","mei"],["mei","bel"],["bet","ani"],["bel","mnt"],["ani","anl"],["anl","mnt"],["ani","sai"],["mnt","rig"]]],["Orsa Maggiore*","ali",[["dub","mer"],["mer","phe"],["phe","meg"],["meg","dub"],["meg","ali"],["ali","miz"],["miz","alk"]]],["Cassiopea*","gcs",[["seg","ruc"],["ruc","gcs"],["gcs","sch"],["sch","cph"]]],["Triangolo Estivo","atr",[["veg","den"],["den","atr"],["atr","veg"]]],["Triangolo Invernale","pro",[["sir","pro"],["pro","bet"],["bet","sir"]]]];
+var MV={az:180,alt:35,fov:80,sel:null,comp:0,off:ld("off",0),raw:null,lines:1,vis:[]};
+function pos(id,t,c){var s=ST[id];return altaz(s[1]*15,s[2],c.la,c.lo,t)}
+function proj(az,alt,W,H){var A=az*R,a=alt*R,A0=MV.az*R,a0=MV.alt*R,dx=Math.cos(a)*Math.sin(A),dy=Math.cos(a)*Math.cos(A),dz=Math.sin(a),
+X=dx*Math.cos(A0)-dy*Math.sin(A0),Y=-dx*Math.sin(a0)*Math.sin(A0)-dy*Math.sin(a0)*Math.cos(A0)+dz*Math.cos(a0),
+Z=dx*Math.cos(a0)*Math.sin(A0)+dy*Math.cos(a0)*Math.cos(A0)+dz*Math.sin(a0);
+if(Z<-0.95)return null;var k=2/(1+Z),S=(W/2)/(2*Math.tan(MV.fov*R/4));return[W/2+X*k*S,H/2-Y*k*S]}
+/*END2*/
+var FQ=0;function rq(){if(!FQ){FQ=1;requestAnimationFrame(function(){FQ=0;dr()})}}
+function dr(){var cv=$("cv");if(!cv||$("t-mappa").classList.contains("hide"))return;var c=ld("loc",null),W=cv.clientWidth,H=cv.clientHeight;if(!W)return;
+var d=window.devicePixelRatio||1;if(cv.width!==Math.round(W*d)||cv.height!==Math.round(H*d)){cv.width=Math.round(W*d);cv.height=Math.round(H*d)}
+var g=cv.getContext("2d");g.setTransform(d,0,0,d,0,0);
+var cs=getComputedStyle(document.documentElement),red=document.documentElement.getAttribute("data-mode")==="red",tx=cs.getPropertyValue("--tx").trim(),ac=cs.getPropertyValue("--ac").trim(),mu=cs.getPropertyValue("--mut").trim();
+g.fillStyle=red?"#080101":"#050814";g.fillRect(0,0,W,H);
+if(!c){g.fillStyle=mu;g.font="15px sans-serif";g.textAlign="center";g.fillText("Imposta la posizione nella scheda Stasera",W/2,H/2);return}
+var t=new Date(),P={},k,q,p;for(k in ST)P[k]=pos(k,t,c);
+g.strokeStyle=mu;g.lineWidth=1;g.beginPath();var pen=0;for(var a=0;a<=360;a+=4){q=proj(a,0,W,H);if(q){pen?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);pen=1}else pen=0}g.stroke();
+g.fillStyle=ac;g.font="bold 14px sans-serif";g.textAlign="center";[["N",0],["E",90],["S",180],["O",270]].forEach(function(o){var z=proj(o[1],1,W,H);if(z)g.fillText(o[0],z[0],z[1]-6)});
+if(MV.lines)CN.forEach(function(n){g.strokeStyle=mu;g.lineWidth=1.2;n[2].forEach(function(l){var a=P[l[0]],b=P[l[1]];if(a[0]<-2||b[0]<-2)return;var u=proj(a[1],a[0],W,H),v=proj(b[1],b[0],W,H);if(u&&v){g.beginPath();g.moveTo(u[0],u[1]);g.lineTo(v[0],v[1]);g.stroke()}});
+var s=P[n[1]];if(s[0]>-2){var z=proj(s[1],s[0],W,H);if(z){g.fillStyle=mu;g.font="12px sans-serif";g.textAlign="center";g.fillText(n[0],z[0],z[1]+20)}}});
+MV.vis=[];
+for(k in ST){var s=ST[k],a=P[k];if(a[0]<-1)continue;p=proj(a[1],a[0],W,H);if(!p||p[0]<-20||p[0]>W+20||p[1]<-20||p[1]>H+20)continue;
+var r=Math.max(1.3,3.6-s[3]*0.9);g.fillStyle=tx;g.beginPath();g.arc(p[0],p[1],r,0,7);g.fill();
+if(s[3]<2.3||MV.fov<55){g.font="12px sans-serif";g.textAlign="left";g.fillText(s[0],p[0]+r+3,p[1]+4)}
+MV.vis.push([k,p[0],p[1]]);if(MV.sel===k){g.strokeStyle=ac;g.lineWidth=2;g.beginPath();g.arc(p[0],p[1],r+6,0,7);g.stroke()}}
+if(MV.comp){g.strokeStyle=ac;g.lineWidth=1;g.beginPath();g.moveTo(W/2-10,H/2);g.lineTo(W/2+10,H/2);g.moveTo(W/2,H/2-10);g.lineTo(W/2,H/2+10);g.stroke()}}
+function ri(){var el=$("mi"),c=ld("loc",null);if(!MV.sel||!c){el.textContent=MV.comp?"Punta il telefono verso il cielo.":"Trascina per girare il cielo. Tocca una stella per i dettagli.";return}
+var s=ST[MV.sel],a=pos(MV.sel,new Date(),c);el.textContent=s[0]+" · altezza "+Math.round(a[0])+"°, direzione "+DIR[Math.round(a[1]/45)%8]+(a[0]<0?" (sotto l’orizzonte)":"")+" · posizione "+["non ancora verificata","verificata su 1 fonte","verificata su 2 fonti"][s[4]]}
+(function(){var cv=$("cv"),PT=null;
+cv.addEventListener("pointerdown",function(e){PT={x:e.clientX,y:e.clientY,m:0};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointermove",function(e){if(!PT)return;var dx=e.clientX-PT.x,dy=e.clientY-PT.y;PT.m+=Math.abs(dx)+Math.abs(dy);PT.x=e.clientX;PT.y=e.clientY;if(MV.comp)return;var k=MV.fov/cv.clientWidth;MV.az=((MV.az-dx*k)%360+360)%360;MV.alt=Math.max(-30,Math.min(90,MV.alt+dy*k));rq()});
+cv.addEventListener("pointerup",function(e){if(PT&&PT.m<8){var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=null,bd=26;MV.vis.forEach(function(v){var h=Math.hypot(v[1]-x,v[2]-y);if(h<bd){bd=h;b=v[0]}});MV.sel=b;ri();rq()}PT=null});
+window.addEventListener("resize",rq)})();
+function oe(e){if(!MV.comp)return;if(e.webkitCompassHeading==null||e.beta==null){$("mn").textContent="Questo dispositivo non fornisce la bussola: usa il trascinamento.";return}
+MV.raw=e.webkitCompassHeading;MV.az=((MV.raw+MV.off)%360+360)%360;MV.alt=Math.max(-30,Math.min(90,e.beta-90));rq()}
+var OEL=0;
+$("mc").onclick=function(){if(MV.comp){MV.comp=0;$("mc").textContent="🧭 Bussola";$("ma").classList.add("hide");$("mn").textContent="";ri();return}
+var go=function(){MV.comp=1;$("mc").textContent="🧭 Bussola: attiva";$("ma").classList.remove("hide");$("mn").textContent="Prima volta: punta una stella che riconosci con certezza (per esempio la Polare), toccala sulla mappa e premi “Allinea qui”.";if(!OEL){OEL=1;window.addEventListener("deviceorientation",oe)}ri()};
+if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function")DeviceOrientationEvent.requestPermission().then(function(r){if(r==="granted")go();else alert("Permesso alla bussola negato. Puoi usare la mappa trascinando.")}).catch(function(){alert("Bussola non disponibile: usa il trascinamento.")});else go()};
+$("ma").onclick=function(){var c=ld("loc",null);if(!MV.sel||MV.raw==null||!c){alert("Tocca prima una stella sulla mappa mentre punti il telefono verso di lei.");return}
+var a=pos(MV.sel,new Date(),c),o=((a[1]-MV.raw+540)%360)-180;MV.off=o;sv("off",o);$("mn").textContent="Allineato."};
+$("mz").onclick=function(){MV.fov=Math.min(120,MV.fov*1.25);rq()};$("mp").onclick=function(){MV.fov=Math.max(25,MV.fov/1.25);rq()};
+$("ml").onclick=function(){MV.lines=!MV.lines;$("ml").textContent="Sagome: "+(MV.lines?"sì":"no");rq()};
+$("wipe").onclick=function(){if(!confirm("Cancellare posizione, diario e foto da questo telefono? Non si può annullare."))return;try{localStorage.clear()}catch(e){}var f=function(){location.reload()},r=indexedDB.deleteDatabase("cielo");r.onsuccess=f;r.onerror=f;r.onblocked=f};
+setInterval(function(){if(!MV.comp)rq()},3e4);ri();
+
 // tab e modalità
-document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0)}});
-function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m)}
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","mappa","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0);setTimeout(dr,0)}});
+function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m);rq()}
 $("mode").onclick=function(){setMode(document.documentElement.getAttribute("data-mode")==="red"?"normal":"red")};
 setMode(ld("mode","normal"));
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
