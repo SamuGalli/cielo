@@ -52,8 +52,15 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <h2>Mappa del cielo</h2>
 <canvas id="cv" style="width:100%;height:60vh;border-radius:14px;touch-action:none;display:block"></canvas>
 <p class="sub" id="mi"></p>
+<p id="mg"></p>
 <p><button id="mc">🧭 Bussola</button> <button id="mz">−</button> <button id="mp">＋</button> <button id="ml">Sagome: sì</button> <button id="ma" class="hide">Allinea qui</button></p>
 <p class="sub" id="mn"></p>
+<p class="sub" id="md"></p>
+<div class="card"><b>Come si usa</b>
+<p>1. Imposta prima la posizione nella scheda <b>Stasera</b>: senza, la mappa resta vuota.</p>
+<p>2. Trascina il dito per girare il cielo, oppure tocca un nome sotto “Vai a” per saltare a una costellazione che stasera è alta.</p>
+<p>3. Le <b>sagome</b> sono le linee gialle che uniscono le stelle di una costellazione. Se non le vedi, controlla che il tasto Sagome dica “sì”.</p>
+<p>4. Per usare il telefono come una finestra sul cielo, premi <b>Bussola</b>.</p></div>
 <p class="sub">Calcolata dal telefono, senza internet. * = sagoma con posizioni delle stelle ancora da verificare. La bussola dell’iPhone può avere qualche grado di errore: per questo c’è “Allinea qui”.</p>
 </section>
 <section id="t-stelle" class="hide">
@@ -232,10 +239,14 @@ var cs=getComputedStyle(document.documentElement),red=document.documentElement.g
 g.fillStyle=red?"#080101":"#050814";g.fillRect(0,0,W,H);
 if(!c){g.fillStyle=mu;g.font="15px sans-serif";g.textAlign="center";g.fillText("Imposta la posizione nella scheda Stasera",W/2,H/2);return}
 var t=new Date(),P={},k,q,p;for(k in ST)P[k]=pos(k,t,c);
+var vg=[];CN.forEach(function(n,i){var a=P[n[1]];if(a[0]>8)vg.push([i,n[0].replace("*",""),a])});
+if(!MV.init&&!MV.comp&&vg.length){MV.init=1;vg.sort(function(x,y){return y[2][0]-x[2][0]});MV.az=vg[0][2][1];MV.alt=Math.max(25,Math.min(70,vg[0][2][0]));MV.fov=90}
+var hs=vg.map(function(v){return'<button data-g="'+v[0]+'">'+v[1]+"</button>"}).join(" ");
+if(hs!==MV.hs){MV.hs=hs;$("mg").innerHTML=hs?'<span class="sub">Vai a: </span>'+hs:'<span class="sub">Nessuna sagoma è alta sull’orizzonte in questo momento.</span>'}
 g.strokeStyle=mu;g.lineWidth=1;g.beginPath();var pen=0;for(var a=0;a<=360;a+=4){q=proj(a,0,W,H);if(q){pen?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);pen=1}else pen=0}g.stroke();
 g.fillStyle=ac;g.font="bold 14px sans-serif";g.textAlign="center";[["N",0],["E",90],["S",180],["O",270]].forEach(function(o){var z=proj(o[1],1,W,H);if(z)g.fillText(o[0],z[0],z[1]-6)});
-if(MV.lines)CN.forEach(function(n){g.strokeStyle=mu;g.lineWidth=1.2;n[2].forEach(function(l){var a=P[l[0]],b=P[l[1]];if(a[0]<-2||b[0]<-2)return;var u=proj(a[1],a[0],W,H),v=proj(b[1],b[0],W,H);if(u&&v){g.beginPath();g.moveTo(u[0],u[1]);g.lineTo(v[0],v[1]);g.stroke()}});
-var s=P[n[1]];if(s[0]>-2){var z=proj(s[1],s[0],W,H);if(z){g.fillStyle=mu;g.font="12px sans-serif";g.textAlign="center";g.fillText(n[0],z[0],z[1]+20)}}});
+if(MV.lines)CN.forEach(function(n){g.globalAlpha=.75;g.strokeStyle=ac;g.lineWidth=1.8;n[2].forEach(function(l){var a=P[l[0]],b=P[l[1]];if(a[0]<-2||b[0]<-2)return;var u=proj(a[1],a[0],W,H),v=proj(b[1],b[0],W,H);if(u&&v){g.beginPath();g.moveTo(u[0],u[1]);g.lineTo(v[0],v[1]);g.stroke()}});g.globalAlpha=1;
+var s=P[n[1]];if(s[0]>-2){var z=proj(s[1],s[0],W,H);if(z){g.fillStyle=ac;g.font="12px sans-serif";g.textAlign="center";g.fillText(n[0],z[0],z[1]+20)}}});
 MV.vis=[];
 for(k in ST){var s=ST[k],a=P[k];if(a[0]<-1)continue;p=proj(a[1],a[0],W,H);if(!p||p[0]<-20||p[0]>W+20||p[1]<-20||p[1]>H+20)continue;
 var r=Math.max(1.3,3.6-s[3]*0.9);g.fillStyle=tx;g.beginPath();g.arc(p[0],p[1],r,0,7);g.fill();
@@ -250,20 +261,21 @@ cv.addEventListener("pointermove",function(e){if(!PT)return;var dx=e.clientX-PT.
 cv.addEventListener("pointerup",function(e){if(PT&&PT.m<8){var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=null,bd=26;MV.vis.forEach(function(v){var h=Math.hypot(v[1]-x,v[2]-y);if(h<bd){bd=h;b=v[0]}});MV.sel=b;ri();rq()}PT=null});
 window.addEventListener("resize",rq)})();
 function oe(e){if(!MV.comp)return;if(e.webkitCompassHeading==null||e.beta==null){$("mn").textContent="Questo dispositivo non fornisce la bussola: usa il trascinamento.";return}
-MV.raw=e.webkitCompassHeading;MV.az=((MV.raw+MV.off)%360+360)%360;MV.alt=Math.max(-30,Math.min(90,e.beta-90));rq()}
+MV.raw=e.webkitCompassHeading;MV.ev=1;$("md").textContent="Sensori: direzione "+Math.round(MV.raw)+"°, inclinazione "+Math.round(e.beta)+"°";MV.az=((MV.raw+MV.off)%360+360)%360;MV.alt=Math.max(-30,Math.min(90,e.beta-90));rq()}
 var OEL=0;
-$("mc").onclick=function(){if(MV.comp){MV.comp=0;$("mc").textContent="🧭 Bussola";$("ma").classList.add("hide");$("mn").textContent="";ri();return}
-var go=function(){MV.comp=1;$("mc").textContent="🧭 Bussola: attiva";$("ma").classList.remove("hide");$("mn").textContent="Prima volta: punta una stella che riconosci con certezza (per esempio la Polare), toccala sulla mappa e premi “Allinea qui”.";if(!OEL){OEL=1;window.addEventListener("deviceorientation",oe)}ri()};
+$("mc").onclick=function(){if(MV.comp){MV.comp=0;$("mc").textContent="🧭 Bussola";$("ma").classList.add("hide");$("mn").textContent="";$("md").textContent="";ri();return}
+var go=function(){MV.comp=1;$("mc").textContent="🧭 Bussola: attiva";$("ma").classList.remove("hide");$("mn").textContent="Prima volta: punta una stella che riconosci con certezza (per esempio la Polare), toccala sulla mappa e premi “Allinea qui”.";if(!OEL){OEL=1;window.addEventListener("deviceorientation",oe)}ri();setTimeout(function(){if(MV.comp&&!MV.ev)$("md").textContent="Il telefono non sta inviando dati di movimento. Chiudi e riapri l’app e consenti l’accesso ai sensori quando richiesto."},2500)};
 if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function")DeviceOrientationEvent.requestPermission().then(function(r){if(r==="granted")go();else alert("Permesso alla bussola negato. Puoi usare la mappa trascinando.")}).catch(function(){alert("Bussola non disponibile: usa il trascinamento.")});else go()};
 $("ma").onclick=function(){var c=ld("loc",null);if(!MV.sel||MV.raw==null||!c){alert("Tocca prima una stella sulla mappa mentre punti il telefono verso di lei.");return}
 var a=pos(MV.sel,new Date(),c),o=((a[1]-MV.raw+540)%360)-180;MV.off=o;sv("off",o);$("mn").textContent="Allineato."};
+$("mg").onclick=function(e){var i=e.target.dataset.g,c=ld("loc",null);if(i===undefined||!c||MV.comp)return;var a=pos(CN[+i][1],new Date(),c);MV.az=a[1];MV.alt=Math.max(15,Math.min(75,a[0]));rq()};
 $("mz").onclick=function(){MV.fov=Math.min(120,MV.fov*1.25);rq()};$("mp").onclick=function(){MV.fov=Math.max(25,MV.fov/1.25);rq()};
 $("ml").onclick=function(){MV.lines=!MV.lines;$("ml").textContent="Sagome: "+(MV.lines?"sì":"no");rq()};
 $("wipe").onclick=function(){if(!confirm("Cancellare posizione, diario e foto da questo telefono? Non si può annullare."))return;try{localStorage.clear()}catch(e){}var f=function(){location.reload()},r=indexedDB.deleteDatabase("cielo");r.onsuccess=f;r.onerror=f;r.onblocked=f};
 setInterval(function(){if(!MV.comp)rq()},3e4);ri();
 
 // tab e modalità
-document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","mappa","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0);setTimeout(dr,0)}});
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","mappa","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0);setTimeout(dr,0);if(b.dataset.t==="mappa"&&!MV.comp&&!MV.auto){MV.auto=1;$("mc").click()}}});
 function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m);rq()}
 $("mode").onclick=function(){setMode(document.documentElement.getAttribute("data-mode")==="red"?"normal":"red")};
 setMode(ld("mode","normal"));
