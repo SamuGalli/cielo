@@ -43,6 +43,8 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <div class="card"><div class="k">La Luna stasera</div><div id="moon"></div></div>
 <h2>Stasera, dove guardare</h2>
 <div class="card" id="oggi"></div>
+<h2>Bussola guidata</h2>
+<div class="card"><p>Tieni il telefono <b>in piano</b>, come una bussola, con il bordo alto verso dove guardi. Ti dico cosa hai davanti.</p><p><button class="pri" id="bb">🧭 Attiva bussola</button></p><div id="bl"></div><p class="sub">L’altezza la misuri con la mano a braccio teso: un pugno chiuso vale circa 10°. I colori sono indicativi.</p></div>
 <h2>Missione di stasera</h2>
 <div class="card" id="mis"></div>
 <p class="sub">Consiglio: spegni le luci e aspetta 20 minuti. L’occhio si adatta e le stelle deboli compaiono. Evita lo schermo bianco, usa la modalità notte.</p>
@@ -261,7 +263,7 @@ cv.addEventListener("pointermove",function(e){if(!PT)return;var dx=e.clientX-PT.
 cv.addEventListener("pointerup",function(e){if(PT&&PT.m<8){var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=null,bd=26;MV.vis.forEach(function(v){var h=Math.hypot(v[1]-x,v[2]-y);if(h<bd){bd=h;b=v[0]}});MV.sel=b;ri();rq()}PT=null});
 window.addEventListener("resize",rq)})();
 function oe(e){if(!MV.comp)return;if(e.webkitCompassHeading==null||e.beta==null){$("mn").textContent="Questo dispositivo non fornisce la bussola: usa il trascinamento.";return}
-MV.raw=e.webkitCompassHeading;MV.ev=1;$("md").textContent="Sensori: direzione "+Math.round(MV.raw)+"°, inclinazione "+Math.round(e.beta)+"°";MV.az=((MV.raw+MV.off)%360+360)%360;MV.alt=Math.max(-30,Math.min(90,e.beta-90));rq()}
+MV.raw=e.webkitCompassHeading;MV.ev=1;$("md").textContent="Sensori: direzione "+Math.round(MV.raw)+"°, inclinazione "+Math.round(e.beta)+"°";if(e.beta<150){var tg=((MV.raw+MV.off)%360+360)%360;MV.az=((MV.az+0.3*(((tg-MV.az+540)%360)-180))%360+360)%360}MV.alt=Math.max(-30,Math.min(90,e.beta-90));rq()}
 var OEL=0;
 $("mc").onclick=function(){if(MV.comp){MV.comp=0;$("mc").textContent="🧭 Bussola";$("ma").classList.add("hide");$("mn").textContent="";$("md").textContent="";ri();return}
 var go=function(){MV.comp=1;$("mc").textContent="🧭 Bussola: attiva";$("ma").classList.remove("hide");$("mn").textContent="Prima volta: punta una stella che riconosci con certezza (per esempio la Polare), toccala sulla mappa e premi “Allinea qui”.";if(!OEL){OEL=1;window.addEventListener("deviceorientation",oe)}ri();setTimeout(function(){if(MV.comp&&!MV.ev)$("md").textContent="Il telefono non sta inviando dati di movimento. Chiudi e riapri l’app e consenti l’accesso ai sensori quando richiesto."},2500)};
@@ -273,6 +275,24 @@ $("mz").onclick=function(){MV.fov=Math.min(120,MV.fov*1.25);rq()};$("mp").onclic
 $("ml").onclick=function(){MV.lines=!MV.lines;$("ml").textContent="Sagome: "+(MV.lines?"sì":"no");rq()};
 $("wipe").onclick=function(){if(!confirm("Cancellare posizione, diario e foto da questo telefono? Non si può annullare."))return;try{localStorage.clear()}catch(e){}var f=function(){location.reload()},r=indexedDB.deleteDatabase("cielo");r.onsuccess=f;r.onerror=f;r.onblocked=f};
 setInterval(function(){if(!MV.comp)rq()},3e4);ri();
+
+// bussola guidata
+ST.ple=["Pleiadi (M45)",3.79,24.12,1.6,0];ST.m31=["Galassia di Andromeda",0.7117,41.27,3.4,0];
+var COL={sir:"bianco-azzurra, la più brillante del cielo",can:"bianco-giallastra",art:"arancione",acn:"gialla",veg:"bianco-azzurra",cap:"giallo-bianca",rig:"bianco-azzurra",pro:"bianco-giallastra",bet:"rosso-arancio",atr:"bianca",ald:"arancione",spi:"azzurra",ant:"rossa",plx:"arancione chiaro",fom:"bianca",den:"bianca",reg:"bianco-azzurra",cas:"bianca",pln:"giallo-bianca, ferma a nord",dub:"arancione chiaro",mer:"bianca",phe:"bianca",meg:"bianca",ali:"bianca",miz:"bianca",alk:"azzurra",sch:"arancione",cph:"giallo chiaro",gcs:"azzurra",ruc:"bianca",seg:"azzurra",bel:"bianco-azzurra",ani:"azzurra",anl:"azzurra",mnt:"azzurra",sai:"azzurra",mei:"azzurra",ple:"gruppo di puntini azzurri",m31:"macchia pallida, serve cielo buio"};
+var CB={on:0,h:null},CBL=0,LT=0;
+function pg(a){var n=Math.max(0,Math.round(a/10));return n+(n===1?" pugno":" pugni")}
+function rB(){var c=ld("loc",null),el=$("bl");if(!c){el.innerHTML="<p>Imposta prima la posizione, qui sopra.</p>";return}if(CB.h==null)return;
+var t=new Date(),L=[],k;for(k in ST){var a=pos(k,t,c);if(a[0]<5)continue;var d=((a[1]-CB.h+540)%360)-180;if(Math.abs(d)<=40)L.push([k,a,d])}
+L.sort(function(x,y){return ST[x[0]][3]-ST[y[0]][3]});L=L.slice(0,6);
+var o="<p><b>Stai guardando verso "+Math.round(CB.h)+"° ("+DIR[Math.round(CB.h/45)%8]+")</b></p>";
+if(!L.length)o+='<p class="sub">Qui davanti non ci sono astri brillanti sopra l’orizzonte. Gira su te stesso.</p>';
+L.forEach(function(x){var s=ST[x[0]],a=x[1],d=x[2];o+="<p><b>"+s[0]+"</b>"+(COL[x[0]]?" · "+COL[x[0]]:"")+'<br><span class="sub">altezza '+Math.round(a[0])+"° (circa "+pg(a[0])+" sopra l’orizzonte) · "+(Math.abs(d)<4?"proprio davanti a te":Math.round(Math.abs(d))+"° a "+(d>0?"destra":"sinistra"))+"</span></p>"});
+el.innerHTML=o}
+function ob(e){if(!CB.on||e.webkitCompassHeading==null)return;var h=e.webkitCompassHeading;CB.h=CB.h==null?h:((CB.h+0.25*(((h-CB.h+540)%360)-180))%360+360)%360;var n=Date.now();if(n-LT>250){LT=n;rB()}}
+$("bb").onclick=function(){if(CB.on){CB.on=0;$("bb").textContent="🧭 Attiva bussola";$("bl").innerHTML="";return}
+var go=function(){CB.on=1;CB.h=null;$("bb").textContent="Ferma la bussola";$("bl").innerHTML='<p class="sub">Aspetto i dati dei sensori…</p>';if(!CBL){CBL=1;window.addEventListener("deviceorientation",ob)}
+setTimeout(function(){if(CB.on&&CB.h==null)$("bl").innerHTML='<p class="sub">Il telefono non invia dati di direzione. Chiudi e riapri l’app e consenti l’accesso ai sensori quando richiesto.</p>'},2500)};
+if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function")DeviceOrientationEvent.requestPermission().then(function(r){if(r==="granted")go();else alert("Permesso ai sensori negato.")}).catch(function(){alert("Bussola non disponibile su questo dispositivo.")});else go()};
 
 // tab e modalità
 document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","mappa","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0);setTimeout(dr,0);if(b.dataset.t==="mappa"&&!MV.comp&&!MV.auto){MV.auto=1;$("mc").click()}}});
