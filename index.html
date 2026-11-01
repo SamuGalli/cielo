@@ -45,8 +45,7 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <div class="card" id="oggi"></div>
 <h2>Bussola guidata</h2>
 <div class="card"><p>Tieni il telefono <b>in piano</b>, come una bussola, con il bordo alto verso dove guardi. Ti dico cosa hai davanti.</p><p><button class="pri" id="bb">🧭 Attiva bussola</button></p><div id="bl"></div><p class="sub">L’altezza la misuri con la mano a braccio teso: un pugno chiuso vale circa 10°. I colori sono indicativi.</p></div>
-<h2>Missione di stasera</h2>
-<div class="card" id="mis"></div>
+
 <p class="sub">Consiglio: spegni le luci e aspetta 20 minuti. L’occhio si adatta e le stelle deboli compaiono. Evita lo schermo bianco, usa la modalità notte.</p>
 </section>
 
@@ -78,6 +77,7 @@ img.th{width:72px;height:72px;object-fit:cover;border-radius:8px;margin:4px 4px 
 <p><span class="k">Stella o pianeta?</span> Le stelle scintillano; i pianeti hanno una luce più ferma. Un punto che si muove lento e regolare è un satellite o un aereo.</p>
 <p><span class="k">Salti di stella.</span> Per trovare un oggetto debole parti da una stella brillante e misura i salti con la mano.</p></div>
 <h2>Privacy</h2><div class="card"><p>Tutto resta sul tuo telefono: posizione (solo se la scegli), diario, foto, spunte e taratura della bussola. L’app non invia dati a nessuno: nel codice non ci sono richieste verso altri siti. Il sito è pubblico ma contiene solo il codice dell’app, non i tuoi dati. Come per ogni sito, chi lo ospita vede l’indirizzo internet di chi lo apre.</p><p><button id="wipe">🗑 Cancella tutti i miei dati</button></p></div>
+<h2>Aggiornamento</h2><div class="card"><p>Versione 3.4. Se l’app non mostra le novità, premi qui: scarica di nuovo l’ultima versione. Il diario non viene toccato.</p><p><button id="upd">↻ Forza aggiornamento</button></p></div>
 </section>
 <section id="t-diario" class="hide">
 <h2>Nuova uscita</h2>
@@ -135,15 +135,11 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;
 function ld(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var now=new Date();
-$("date").textContent=now.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+$("date").textContent=now.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · v3.4";
 // luna
 var P=29.530588,age=(((now-Date.UTC(2000,0,6,18,14))/864e5)%P+P)%P,il=Math.round((1-Math.cos(2*Math.PI*age/P))/2*100);
 var nm=age<1.8?"Luna nuova":age<7.4?"Luna crescente":age<9.2?"Primo quarto":age<14.8?"Gibbosa crescente":age<16.6?"Luna piena":age<22.1?"Gibbosa calante":age<23.9?"Ultimo quarto":age<27.7?"Luna calante":"Luna nuova";
 $("moon").innerHTML=nm+" (circa "+il+"% illuminata). "+(il>60?"Molto luminosa: le stelle deboli e Andromeda saranno difficili.":"Cielo favorevole per le stelle deboli.");
-// missioni
-function rMis(){var d=ld("mis",{}),h="";MIS.forEach(function(t,i){h+='<label class="m"><input type="checkbox" data-i="'+i+'"'+(d[i]?" checked":"")+'><span>'+esc(t)+'</span></label>'});$("mis").innerHTML=h}
-$("mis").addEventListener("change",function(e){var d=ld("mis",{});d[e.target.dataset.i]=e.target.checked;sv("mis",d)});
-rMis();
 // stelle
 var h="";STARS.forEach(function(s){h+='<details class="card star"><summary><div class="row"><h3>'+esc(s.n)+'</h3><span class="sub">▾</span></div><div class="sub">'+esc(s.c)+' · '+esc(s.d)+'</div></summary><p><span class="tag">'+esc(s.s)+'</span></p><p><span class="k">Come trovarla.</span> '+esc(s.f)+'</p><p><span class="k">Storia.</span> '+esc(s.st)+'</p><p><span class="k">Scienza.</span> '+esc(s.sc)+'</p></details>'});
 $("stars").innerHTML=h;
@@ -160,18 +156,18 @@ l=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*R,e=(23.439-4e-7*n)*R;
 return[Math.atan2(Math.cos(e)*Math.sin(l),Math.cos(l))/R,Math.asin(Math.sin(e)*Math.sin(l))/R]}
 function salt(d,c){var s=sun(d);return altaz(s[0],s[1],c.la,c.lo,d)[0]}
 /*END*/
-var CITY={"Torino":[45.07,7.69],"Milano":[45.46,9.19],"Venezia":[45.44,12.32],"Bologna":[44.49,11.34],"Firenze":[43.77,11.26],"Roma":[41.90,12.50],"Napoli":[40.85,14.27],"Bari":[41.12,16.87],"Palermo":[38.12,13.36],"Cagliari":[39.22,9.12]};
+var CITY={"Diano Marina":[43.911,8.080],"Scopa (Valsesia)":[45.783,8.115],"Oga (Valdisotto)":[46.435,10.358]};
 var OBJ=[["Stella Polare","Orsa Minore",2.5303,89.264],["Vega","Lira",18.6156,38.784],["Sirio","Cane Maggiore",6.7525,-16.716],["Betelgeuse","Orione",5.9194,7.407],["Rigel","Orione",5.2422,-8.202],["Arturo","Boote",14.2611,19.182],["Capella","Auriga",5.2781,45.998],["Aldebaran","Toro",4.5986,16.509],["Altair","Aquila",19.8464,8.868],["Deneb","Cigno",20.6906,45.280],["Antares","Scorpione",16.4900,-26.432],["Spica","Vergine",13.4200,-11.161],["Regulus","Leone",10.1394,11.967],["Fomalhaut","Pesce Australe",22.9608,-29.622],["Pleiadi (M45)","Toro",3.79,24.12],["Galassia di Andromeda","Andromeda",0.7117,41.27]];
 var DIR=["nord","nord-est","est","sud-est","sud","sud-ovest","ovest","nord-ovest"],OFF=0;
 function hm(t){return t?t.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"—"}
 function rT(){var el=$("oggi"),c=ld("loc",null);
-if(!c){var o='<p>Per sapere cosa vedi dal tuo posto serve la posizione. Resta nel telefono, non viene inviata a nessuno.</p><p><button class="pri" data-geo="1">Usa la mia posizione</button></p><label>…oppure scegli una città</label><select data-city="1"><option value="">Scegli…</option>';
+if(!c){var o='<p>Per sapere cosa vedi dal tuo posto serve la posizione. Resta nel telefono, non viene inviata a nessuno.</p><p><button class="pri" data-geo="1">Usa la mia posizione</button></p><label>Oppure scegli un luogo</label><select data-city="1"><option value="">Scegli…</option>';
 for(var k in CITY)o+="<option>"+k+"</option>";el.innerHTML=o+'</select><label>…oppure inserisci le coordinate</label><input id="lat" inputmode="decimal" placeholder="Latitudine, es. 45.0"><input id="lon" inputmode="decimal" placeholder="Longitudine, es. 9.0" style="margin-top:6px"><p><button data-man="1">Usa queste coordinate</button></p>';return}
 var b=new Date();if(b.getHours()<12)b.setDate(b.getDate()-1);b.setHours(12,0,0,0);
 var ev={},pv=salt(b,c);
 for(var m=1;m<=720;m++){var t=new Date(b.getTime()+m*12e4),a=salt(t,c);
 if(pv>-0.833&&a<=-0.833&&!ev.s)ev.s=t;if(pv>-18&&a<=-18&&!ev.d)ev.d=t;if(pv<=-18&&a>-18&&ev.d&&!ev.e)ev.e=t;if(pv<=-0.833&&a>-0.833&&ev.s&&!ev.a)ev.a=t;pv=a}
-el.innerHTML='<p><span class="k">Tramonto</span> '+hm(ev.s)+' · <span class="k">Buio completo</span> '+hm(ev.d)+"–"+hm(ev.e)+' · <span class="k">Alba</span> '+hm(ev.a)+'</p><label>Ora: <span id="oraL"></span></label><input type="range" min="0" max="12" value="'+OFF+'" data-off="1"><div id="lst"></div><p class="sub">Posizione: '+esc(c.n)+' <button data-reset="1">cambia</button></p><p class="sub">Calcolo fatto dal telefono, senza internet. Precisione di circa 1°, sufficiente a occhio nudo. Non include ancora i pianeti.</p>';rL()}
+el.innerHTML='<p><span class="k">Tramonto</span> '+hm(ev.s)+' · <span class="k">Buio completo</span> '+hm(ev.d)+"–"+hm(ev.e)+' · <span class="k">Alba</span> '+hm(ev.a)+'</p><label>Ora: <span id="oraL"></span></label><input type="range" min="0" max="12" value="'+OFF+'" data-off="1"><div id="lst"></div><p class="sub">Posizione: '+esc(c.n)+' <button data-reset="1">cambia</button></p><p class="sub">Calcolo fatto dal telefono, senza internet. Precisione di circa 1°, sufficiente a occhio nudo. Non include ancora i pianeti. Il calcolo suppone un orizzonte piano: in valle le montagne anticipano il tramonto.</p>';rL()}
 function rL(){var c=ld("loc",null);if(!c||!$("lst"))return;var t=new Date(Date.now()+OFF*36e5),o=[],sa=salt(t,c);
 OBJ.forEach(function(s){var a=altaz(s[2]*15,s[3],c.la,c.lo,t);if(a[0]>10)o.push([s,a])});
 o.sort(function(x,y){return y[1][0]-x[1][0]});
@@ -294,12 +290,14 @@ var go=function(){CB.on=1;CB.h=null;$("bb").textContent="Ferma la bussola";$("bl
 setTimeout(function(){if(CB.on&&CB.h==null)$("bl").innerHTML='<p class="sub">Il telefono non invia dati di direzione. Chiudi e riapri l’app e consenti l’accesso ai sensori quando richiesto.</p>'},2500)};
 if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function")DeviceOrientationEvent.requestPermission().then(function(r){if(r==="granted")go();else alert("Permesso ai sensori negato.")}).catch(function(){alert("Bussola non disponibile su questo dispositivo.")});else go()};
 
+$("upd").onclick=function(){var f=function(){location.reload()};
+if(navigator.serviceWorker&&window.caches)navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}).then(function(){return caches.keys()}).then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).then(f,f);else f()};
 // tab e modalità
 document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});["sera","mappa","stelle","guida","diario"].forEach(function(t){$("t-"+t).classList.toggle("hide",t!==b.dataset.t)});window.scrollTo(0,0);setTimeout(dr,0);if(b.dataset.t==="mappa"&&!MV.comp&&!MV.auto){MV.auto=1;$("mc").click()}}});
 function setMode(m){document.documentElement.setAttribute("data-mode",m);$("mode").textContent=m==="red"?"⚪ Modalità normale":"🔴 Modalità notte";sv("mode",m);rq()}
 $("mode").onclick=function(){setMode(document.documentElement.getAttribute("data-mode")==="red"?"normal":"red")};
 setMode(ld("mode","normal"));
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller,rl=0;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!rl){rl=1;location.reload()}});window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(function(){})})}
 </script>
 </body>
 </html>
